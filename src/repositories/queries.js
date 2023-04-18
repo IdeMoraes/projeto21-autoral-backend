@@ -55,13 +55,41 @@ async function deleteSessionByToken(token){
         throw new Error(`${error.name}: ${error.message}`);
     }
 }
-async function createPatient({name, birthdate, city, neighborhood, street, number, complement, responsible, phoneNumber, email, created_by}){
+async function createPatient({name, birthdate, responsible, phoneNumber, email, created_by}){
     try {
-        const resp =await postgres.query('INSERT INTO "patient" (name, birthdate, city, neighborhood, street, number, complement, responsible, phoneNumber, email, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id;', [name, birthdate, city, neighborhood, street, number, complement, responsible, phoneNumber, email, created_by]);
+        const resp = await postgres.query('INSERT INTO "patient" (name, birthdate, responsible, phoneNumber, email, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;', [name, birthdate, responsible, phoneNumber, email, created_by]);
         return resp.rows[0];
     } catch (error) {
         throw new Error(`${error.name}: ${error.message}`);
     }
 }
+async function findAllPatients(){
+    try {
+        const resp = await postgres.query('SELECT id, name FROM "patient";');
+        return resp.rows;
+    } catch (error) {
+        throw new Error(`${error.name}: ${error.message}`);
+    }
+}
+async function createAddress({city, neighborhood, street, number, complement, patient_id, created_by}){
+    try {
+        await postgres.query('INSERT INTO "address" (city, neighborhood, street, number, complement, patient_id, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id;', [city, neighborhood, street, number, complement, patient_id, created_by]);
+    } catch (error) {
+        throw new Error(`${error.name}: ${error.message}`);
+    }
+}
+async function createAppointment({patient_id, type_id, health_insurance, date, start_time, created_by}){
+    try {
+        await postgres.query('INSERT INTO "appointment" (patient_id, type_id, health_insurance, date, start_time, created_by) VALUES ($1, $2, $3, $4, $5, $6);', [patient_id, type_id, health_insurance, date, start_time, created_by]);
+    } catch (error) {
+        throw new Error(`${error.name}: ${error.message}`);
+    }
+}
+async function findAppointmentByDate(date){
+    const resp = await postgres.query(
+        'SELECT a.id, a.type_id, a.health_insurance, a.start_time, p.name AS patient_name FROM appointment a JOIN patient p ON p.id = a.patient_id WHERE a.date = $1 ORDER BY a.start_time ASC;',
+        [date]);
+    return resp.rows;
+}
 
-export {createUser, findUserByName, findUserByUserId, createSession, findSessionByToken, deleteSessionByToken, createPatient};
+export {createUser, findUserByName, findUserByUserId, createSession, findSessionByToken, deleteSessionByToken, createPatient, findAllPatients, createAddress, createAppointment, findAppointmentByDate};

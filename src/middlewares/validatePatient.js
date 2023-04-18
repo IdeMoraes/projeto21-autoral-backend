@@ -12,9 +12,8 @@ const patientSchema = joi.object({
     }),
     responsible: joi.string().required(),
     phoneNumber: joi.string().required(),
-    email: joi.string().email().required(),
-    created_by: joi.string().required()
-  });
+    email: joi.string().email().required()
+});
 
 export async function validatePatient(req, res, next){
     const patient = req.body;
